@@ -5,6 +5,5 @@ class ProcessesTab(QWidget):
         super().__init__(parent)
     
     def update_data(self, data):
-        for proc in data['processes']:
-            print(proc)
+        pass
 
