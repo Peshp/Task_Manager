@@ -32,12 +32,16 @@ class MainWindow(QMainWindow):
 
         self.monitor.stats_updated.connect(self.processes_tab.update_data)
         self.monitor.stats_updated.connect(self.performance_tab.update_data)
+        self.performance_tab.set_cpu_name(self.monitor.get_cpu_name())
+        self.performance_tab.set_mem_capacity(self.monitor.get_mem_gb())
 
         work_space_layout = QVBoxLayout()
         work_space_layout.setContentsMargins(20, 16, 20, 20)
+        
         self.tabs = QTabWidget()
         self.tabs.addTab(self.processes_tab, 'Processes')
         self.tabs.addTab(self.performance_tab, 'Performance')
+
         self.tabs.setStyleSheet("""
             QTabWidget::pane { border: none; background: transparent; }
             QTabBar::tab {
