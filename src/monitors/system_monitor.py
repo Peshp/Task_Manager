@@ -9,6 +9,9 @@ class SystemMonitor(QObject):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.poll)
         self.timer.start(interval_ms)
+
+        self.cpu_name = self.get_cpu_name()
+        self.memory_capacity = self.get_mem_gb()
     
     def poll(self):
         data = {
@@ -19,3 +22,18 @@ class SystemMonitor(QObject):
             )),
         }
         self.stats_updated.emit(data)
+    
+    def get_cpu_name(self):
+        with open("/proc/cpuinfo") as f:
+            for line in f:
+                if line.strip().startswith("model name"):
+                    return line.split(":", 1)[1].strip()
+        return "Unknown CPU"
+    
+    def get_mem_gb(self):
+        mem = psutil.virtual_memory()
+        total_gb = mem.total / (1024 ** 3)
+        active_gb = mem.used / (1024 ** 3)
+        free_gb = mem.available / (1024 ** 3)
+
+        return f"Total: {total_gb:.1f}GB    Used: {active_gb:.1f}GB    Avalaibe: {free_gb:.1f}GB"
