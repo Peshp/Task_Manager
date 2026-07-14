@@ -13,7 +13,7 @@ class SystemMonitor(QObject):
         self.timer.start(interval_ms)
 
         self.disk_timer = QTimer(self)
-        self.disk_timer.timeout.connect(self.get_disk_stats)
+        self.disk_timer.timeout.connect(self.poll_disk)
         self.disk_timer.start(interval_ms)
 
         self.cpu_name = self.get_cpu_name()
@@ -21,6 +21,8 @@ class SystemMonitor(QObject):
 
         self.disk_prev = psutil.disk_io_counters()
         self.disk_prev_time = time.time()
+
+        self.disk_stats = self.get_disk_stats()
     
     def poll(self):
         data = {
@@ -33,22 +35,7 @@ class SystemMonitor(QObject):
         }
         self.stats_updated.emit(data)
     
-    def get_cpu_name(self):
-        with open("/proc/cpuinfo") as f:
-            for line in f:
-                if line.strip().startswith("model name"):
-                    return line.split(":", 1)[1].strip()
-        return "Unknown CPU"
-    
-    def get_mem_gb(self):
-        mem = psutil.virtual_memory()
-        total_gb = mem.total / (1024 ** 3)
-        active_gb = mem.used / (1024 ** 3)
-        free_gb = mem.available / (1024 ** 3)
-
-        return f"Total: {total_gb:.1f}GB    Used: {active_gb:.1f}GB    Avalaibe: {free_gb:.1f}GB"
-    
-    def get_disk_stats(self):
+    def poll_disk(self):
         disk_now = psutil.disk_io_counters()
         now = time.time()
         elapsed = now - self.disk_prev_time
@@ -80,3 +67,31 @@ class SystemMonitor(QObject):
 
         self.disk_prev = disk_now
         self.disk_prev_time = now
+
+    def get_disk_stats(self):
+        disk = psutil.disk_usage('/')
+
+        data = {
+            'total': disk.total / (1024**3),
+            'used': disk.used / (1024**3),
+            'free': disk.free / (1024**3),
+        }
+
+        return data
+    
+    def get_cpu_name(self):
+        with open("/proc/cpuinfo") as f:
+            for line in f:
+                if line.strip().startswith("model name"):
+                    return line.split(":", 1)[1].strip()
+        return "Unknown CPU"
+    
+    def get_mem_gb(self):
+        mem = psutil.virtual_memory()
+        total_gb = mem.total / (1024 ** 3)
+        active_gb = mem.used / (1024 ** 3)
+        free_gb = mem.available / (1024 ** 3)
+
+        return f"Total: {total_gb:.1f}GB    Used: {active_gb:.1f}GB    Avalaibe: {free_gb:.1f}GB"
+    
+
