@@ -1,7 +1,5 @@
-import psutil
+import psutil, time
 
-mem = psutil.virtual_memory().active
-total = psutil.virtual_memory().total
-
-print(mem / 1000000000)
-print(total / 1000000000)
+net = psutil.net_io_counters()
+print(f"Bytes sent: {net.bytes_sent}")
+print(f"Bytes received: {net.bytes_recv}")
