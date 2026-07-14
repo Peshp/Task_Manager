@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
 from widgets.title_bar import TitleBar
 from tabs.performarce_tab import PerformarceTab
 from tabs.processes_tab import ProcessesTab
+from tabs.disk_tab import DiskTab
 from monitors.system_monitor import SystemMonitor
 
 class MainWindow(QMainWindow):
@@ -29,11 +30,14 @@ class MainWindow(QMainWindow):
 
         self.processes_tab = ProcessesTab()
         self.performance_tab = PerformarceTab()
+        self.disk_tab = DiskTab()
 
         self.monitor.stats_updated.connect(self.processes_tab.update_data)
         self.monitor.stats_updated.connect(self.performance_tab.update_data)
+        self.monitor.stats_updated_disk.connect(self.disk_tab.update_data)
         self.performance_tab.set_cpu_name(self.monitor.get_cpu_name())
         self.performance_tab.set_mem_capacity(self.monitor.get_mem_gb())
+        self.disk_tab.set_disk_capacity(self.monitor.get_disk_stats())
 
         work_space_layout = QVBoxLayout()
         work_space_layout.setContentsMargins(20, 16, 20, 20)
@@ -41,6 +45,7 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.tabs.addTab(self.processes_tab, 'Processes')
         self.tabs.addTab(self.performance_tab, 'Performance')
+        self.tabs.addTab(self.disk_tab, 'Disk')
 
         self.tabs.setStyleSheet("""
             QTabWidget::pane { border: none; background: transparent; }
