@@ -17,7 +17,6 @@ class SystemMonitor(QObject):
         self.disk_timer.start(interval_ms)
 
         self.cpu_name = self.get_cpu_name()
-        self.memory_capacity = self.get_mem_gb()
 
         self.disk_prev = psutil.disk_io_counters()
         self.disk_prev_time = time.time()
@@ -91,7 +90,11 @@ class SystemMonitor(QObject):
         total_gb = mem.total / (1024 ** 3)
         active_gb = mem.used / (1024 ** 3)
         free_gb = mem.available / (1024 ** 3)
+        cached_gb = mem.cached / (1024 ** 3)
+        buffers_gb = mem.buffers / (1024 ** 3)
+        shared_gb = mem.shared / (1024 ** 3)
 
-        return f"Total: {total_gb:.1f}GB    Used: {active_gb:.1f}GB    Avalaibe: {free_gb:.1f}GB"
+        return f"Total: {total_gb:.1f}GB    Used: {active_gb:.1f}GB    Avalaibe: {free_gb:.1f}GB \
+                Cached: {cached_gb:.2f}  Buffers {buffers_gb:.2f}  Shared: {shared_gb:.2f}"
     
 
