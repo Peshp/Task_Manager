@@ -70,6 +70,3 @@ class PerformarceTab(QWidget):
     
     def set_cpu_name(self, cpu_name):
         self.cpu_name_label.setText(cpu_name)
-    
-    def set_mem_capacity(self, gb):
-        self.memory_capacity.setText(str(gb))
