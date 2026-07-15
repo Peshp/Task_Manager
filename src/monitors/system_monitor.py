@@ -1,8 +1,10 @@
 import psutil
+import time
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
 class SystemMonitor(QObject):
     stats_updated = pyqtSignal(dict)
+    stats_updated_disk = pyqtSignal(dict)
 
     def __init__(self, interval_ms=1000, parent=None):
         super().__init__(parent)
@@ -10,8 +12,17 @@ class SystemMonitor(QObject):
         self.timer.timeout.connect(self.poll)
         self.timer.start(interval_ms)
 
+        self.disk_timer = QTimer(self)
+        self.disk_timer.timeout.connect(self.poll_disk)
+        self.disk_timer.start(interval_ms)
+
         self.cpu_name = self.get_cpu_name()
         self.memory_capacity = self.get_mem_gb()
+
+        self.disk_prev = psutil.disk_io_counters()
+        self.disk_prev_time = time.time()
+
+        self.disk_stats = self.get_disk_stats()
     
     def poll(self):
         data = {
@@ -20,8 +31,53 @@ class SystemMonitor(QObject):
             'processes': list(psutil.process_iter(
                 ['pid', 'name', 'cpu_percent', 'memory_percent']
             )),
+
         }
         self.stats_updated.emit(data)
+    
+    def poll_disk(self):
+        disk_now = psutil.disk_io_counters()
+        now = time.time()
+        elapsed = now - self.disk_prev_time
+
+        read_speed = (disk_now.read_bytes - self.disk_prev.read_bytes) / (1024 ** 2) / elapsed
+        write_speed = (disk_now.write_bytes - self.disk_prev.write_bytes) / (1024**2) / elapsed if elapsed > 0 else 0
+
+        busy_ms_this_interval = disk_now.busy_time - self.disk_prev.busy_time
+        active_pct = (busy_ms_this_interval / (elapsed * 1000)) * 100
+
+        time_delta = (disk_now.read_time - self.disk_prev.read_time) + \
+                     (disk_now.write_time - self.disk_prev.write_time)
+        count_delta = (disk_now.read_count - self.disk_prev.read_count) + \
+                      (disk_now.write_count - self.disk_prev.write_count)
+
+        if count_delta > 0:
+            avg_responses = time_delta / count_delta
+        else:
+            avg_responses = 0
+        
+        data = {
+            'active': active_pct,
+            'read': read_speed,
+            'write': write_speed,
+            'avg_responses': avg_responses,
+        }
+
+        self.stats_updated_disk.emit(data)
+
+        self.disk_prev = disk_now
+        self.disk_prev_time = now
+
+    def get_disk_stats(self):
+        disk = psutil.disk_usage('/')
+
+        data = {
+            'total': disk.total / (1024**3),
+            'used': disk.used / (1024**3),
+            'free': disk.free / (1024**3),
+        }
+
+        return data
     
     def get_cpu_name(self):
         with open("/proc/cpuinfo") as f:
@@ -37,3 +93,5 @@ class SystemMonitor(QObject):
         free_gb = mem.available / (1024 ** 3)
 
         return f"Total: {total_gb:.1f}GB    Used: {active_gb:.1f}GB    Avalaibe: {free_gb:.1f}GB"
+    
+
