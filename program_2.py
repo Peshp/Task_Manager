@@ -1,19 +1,16 @@
 import subprocess
 
 result = subprocess.run(
-    ['sudo', 'dmidecode', '--type', 'memory'],
+    ['lscpu'],
     capture_output=True, text=True
 )
 
-stats = {}
-
+data1 = dict()
 for i in result.stdout.splitlines():
-    splitted = i.strip()
-    if ':' in splitted:
-        key, _, value = splitted.partition(':')
-        key = key.strip()
-        value = value.strip()
-        stats[key] = value
+    if ":" in i:
+        label, value = i.split(':', 1)
+        data1[label.strip()] = value.strip()
 
-for key, value in stats.items():
-    print(key, value)
+for i, v in data1.items():
+    if i == 'Socket(s)':
+        print(v)
