@@ -7,8 +7,10 @@ from tabs.performarce_tab import PerformarceTab
 from tabs.processes_tab import ProcessesTab
 from tabs.memory_tab import MemoryTab
 from tabs.disk_tab import DiskTab
+from tabs.cpu_tab import CPUTab
 from monitors.system_monitor import SystemMonitor
 from monitors.memory_monitor import MemoryMonitor
+from monitors.cpu_monitor import CPUMonitor
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -30,16 +32,20 @@ class MainWindow(QMainWindow):
 
         self.monitor = SystemMonitor(interval_ms=1000)
         self.memory_monitor = MemoryMonitor(interval_ms=1000)
+        self.cpu_monitor = CPUMonitor(interval_ms=1000)
 
         self.processes_tab = ProcessesTab()
         self.performance_tab = PerformarceTab()
         self.memory_tab = MemoryTab()
         self.disk_tab = DiskTab()
+        self.cpu_tab = CPUTab()
 
         self.monitor.stats_updated.connect(self.processes_tab.update_data)
         self.monitor.stats_updated.connect(self.performance_tab.update_data)
+        self.cpu_monitor.stats_updated.connect(self.cpu_tab.update_data)
         self.memory_monitor.stats_updated.connect(self.memory_tab.update_data)
         self.monitor.stats_updated_disk.connect(self.disk_tab.update_data)
+        self.cpu_tab.get_static(self.cpu_monitor.get_static())
         self.memory_tab.get_memory_stats(self.memory_monitor.get_mem_gb())
         self.performance_tab.set_cpu_name(self.monitor.get_cpu_name())
         self.disk_tab.set_disk_capacity(self.monitor.get_disk_stats())
@@ -52,6 +58,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.performance_tab, 'Performance')
         self.tabs.addTab(self.memory_tab, 'RAM')
         self.tabs.addTab(self.disk_tab, 'Disk')
+        self.tabs.addTab(self.cpu_tab, 'CPU')
 
         self.tabs.setStyleSheet("""
             QTabWidget::pane { border: none; background: transparent; }
