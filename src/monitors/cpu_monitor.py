@@ -1,6 +1,7 @@
 import psutil
 import subprocess
 import time
+import numpy
 from datetime import timedelta
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
@@ -19,6 +20,8 @@ class CPUMonitor(QObject):
         data = {
             'utilization': psutil.cpu_percent(),
             'current_speed': psutil.cpu_freq().current / 1000,
+            'processes': len(psutil.pids()),
+            'threads': len(list(psutil.process_iter(['num_threads'])))
         }
 
         self.stats_updated.emit(data)
@@ -26,7 +29,6 @@ class CPUMonitor(QObject):
     def get_static(self):    
         data = {
             'uptime': str(timedelta(seconds=int(time.time() - psutil.boot_time()))),
-            'base_speed': psutil.cpu_freq().min / 1000,
             'psyhical': psutil.cpu_count(logical=False),
             'logical': psutil.cpu_count(logical=True),
         }
