@@ -12,5 +12,4 @@ for i in result.stdout.splitlines():
         data1[label.strip()] = value.strip()
 
 for i, v in data1.items():
-    if i == 'Socket(s)':
-        print(v)
+    print(i)
