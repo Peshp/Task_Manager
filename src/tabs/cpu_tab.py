@@ -35,14 +35,14 @@ class CPUTab(QWidget):
         layout.addWidget(self.cpu_plot)
 
         bottom_container = QHBoxLayout()
-        bottom_container.setSpacing(40)
+        bottom_container.setSpacing(20)
 
         # ---------- LEFT MAIN COLUMN (dynamic) ----------
         left_main = QVBoxLayout()
-        left_main.setSpacing(15)
+        left_main.setSpacing(5)
 
         dynamic_grid = QHBoxLayout()
-        dynamic_grid.setSpacing(30)
+        dynamic_grid.setSpacing(10)
 
         dyn_col1 = QVBoxLayout()
         dyn_col1.setSpacing(4)
@@ -90,26 +90,18 @@ class CPUTab(QWidget):
         dyn_col2.addWidget(self.threads)
         dyn_col2.addSpacing(10)
 
-        self.handles_title = QLabel("Handles")
-        self.handles_title.setStyleSheet("color: #9b9b9b; font-size: 14pt;")
-        self.handles = QLabel("0")
-        self.handles.setStyleSheet("color: white; font-size: 16pt;")
-        dyn_col2.addWidget(self.handles_title)
-        dyn_col2.addWidget(self.handles)
-        dyn_col2.addStretch()
-
         dynamic_grid.addLayout(dyn_col1)
         dynamic_grid.addLayout(dyn_col2)
 
         left_main.addLayout(dynamic_grid)
         left_main.addStretch()
 
+        # ---------- RIGHT MAIN COLUMN (dynamic) ----------
         right_main = QGridLayout()
-        right_main.setHorizontalSpacing(15)
-        right_main.setVerticalSpacing(6)
+        right_main.setHorizontalSpacing(50)
+        right_main.setVerticalSpacing(0)
 
         static_rows = [
-            ("Base speed:", "base_speed"),
             ("Sockets:", "sockets"),
             ("Cores:", "physical"),
             ("Logical processors:", "logical"),
@@ -119,18 +111,31 @@ class CPUTab(QWidget):
             ("L3 cache:", "l3_cache"),
         ]
 
-        for row, (label_text, attr_name) in enumerate(static_rows):
-            key_label = QLabel(label_text)
-            key_label.setStyleSheet("color: #9b9b9b; font-size: 13pt;")
+        architecture = [
+            ("Architecture:", "architecture_val"),
+            ("CPU op-mode(s):", "op_modes"),
+            ("Address sizes:", "address_sizes"),
+        ]
 
-            value_label = QLabel("-")
-            value_label.setStyleSheet("color: white; font-size: 13pt;")
+        vendor = [
+            ("CPU family:", "cpu_family"),
+            ("Model:", "cpu_model"),
+            ("Thread(s) per core:", "threads_per_core"),
+            ("Core(s) per socket:", "cores_per_socket"),
+            ("CPU max MHz:", "cpu_max_mhz"),
+            ("CPU min MHz:", "cpu_min_mhz"),
+        ]
 
-            setattr(self, attr_name, value_label)
+        left_column = QVBoxLayout()
+        left_column.addLayout(self.build_pair_grid(architecture))
+        left_column.addSpacing(20)
+        left_column.addLayout(self.build_pair_grid(vendor))
+        left_column.addStretch()
 
-            right_main.addWidget(key_label, row, 0)
-            right_main.addWidget(value_label, row, 1)
+        right_column = self.build_pair_grid(static_rows)
 
+        right_main.addLayout(left_column, 0, 0)
+        right_main.addLayout(right_column, 0, 1)
         right_main.setColumnStretch(1, 1)
 
         right_main_wrapper = QVBoxLayout()
@@ -145,33 +150,28 @@ class CPUTab(QWidget):
     def update_data(self, data):
         cpu_percent = data['utilization']
         current_speed = data['current_speed']
-
         processes = data.get('processes', 0)
         threads = data.get('threads', 0)
-        handles = data.get('handles', 0)
 
         self.utilization.setText(f'{cpu_percent:.0f}%')
         self.current_speed.setText(f'{current_speed:.2f} GHz')
         self.processes.setText(str(processes))
         self.threads.setText(str(threads))
-        self.handles.setText(str(handles))
 
         self.cpu_data.append(cpu_percent)
         self.cpu_curve.setData(list(self.cpu_data))
     
     def get_static(self, data):
-        base_speed = data['base_speed']
         physical = data['psyhical']
         logical = data['logical']
         sockets = data.get('sockets', 1)
-        virtualization = data.get('virtualization', 'N/A')
-        l1_cache = data.get('l1_cache', 'N/A')
-        l2_cache = data.get('l2_cache', 'N/A')
-        l3_cache = data.get('l3_cache', 'N/A')
+        virtualization = data.get('Virtualization', 'N/A')
+        l1_cache = f'{data.get('L1d cache', 'N/A')}  {data.get('L1i cache', 'N/A')}'
+        l2_cache = data.get('L2 cache', 'N/A')
+        l3_cache = data.get('L3 cache', 'N/A')
 
         self.cpu_vendor_label.setText(data['Model name'])
         self.uptime.setText(data['uptime'])
-        self.base_speed.setText(f'{base_speed:.2f} GHz')
         self.sockets.setText(str(sockets))
         self.physical.setText(str(physical))
         self.logical.setText(str(logical))
@@ -179,6 +179,49 @@ class CPUTab(QWidget):
         self.l1_cache.setText(str(l1_cache))
         self.l2_cache.setText(str(l2_cache))
         self.l3_cache.setText(str(l3_cache))
+
+    def get_architecture(self, data):
+        architecture_val = data.get('Architecture', 'N/A')
+        op_modes = data.get('CPU op-mode(s)', 'N/A')
+        address_sizes = data.get('Address sizes', 'N/A')
+
+        self.architecture_val.setText(architecture_val)
+        self.op_modes.setText(op_modes)
+        self.address_sizes.setText(address_sizes)
+    
+    def get_vendor(self, data):
+        cpu_family = data.get('CPU family', 'N/A')
+        cpu_model = data.get('Model', 'N/A')
+        threads_per_core = data.get('Thread(s) per core', 'N/A')
+        cores_per_socket = data.get('Core(s) per socket', 'N/A')
+        cpu_max_mhz = data.get('CPU max MHz', 'N/A')
+        cpu_min_mhz = data.get('CPU min MHz', 'N/A')
+
+        self.cpu_family.setText(cpu_family)
+        self.cpu_model.setText(cpu_model)
+        self.threads_per_core.setText(threads_per_core)
+        self.cores_per_socket.setText(cores_per_socket)
+        self.cpu_max_mhz.setText(cpu_max_mhz)
+        self.cpu_min_mhz.setText(cpu_min_mhz)
+
+    def build_pair_grid(self, pairs):
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(15)
+        grid.setVerticalSpacing(6)
+        for row, (label_text, attr_name) in enumerate(pairs):
+            key_label = QLabel(label_text)
+            key_label.setStyleSheet("color: #9b9b9b; font-size: 13pt;")
+
+            value_label = QLabel("-")
+            value_label.setStyleSheet("color: white; font-size: 13pt;")
+
+            setattr(self, attr_name, value_label)
+
+            grid.addWidget(key_label, row, 0)
+            grid.addWidget(value_label, row, 1)
+        grid.setColumnStretch(1, 1)
+        return grid
+        
 
 
 
