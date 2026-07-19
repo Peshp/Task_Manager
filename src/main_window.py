@@ -45,6 +45,8 @@ class MainWindow(QMainWindow):
         self.cpu_monitor.stats_updated.connect(self.cpu_tab.update_data)
         self.memory_monitor.stats_updated.connect(self.memory_tab.update_data)
         self.monitor.stats_updated_disk.connect(self.disk_tab.update_data)
+        self.cpu_tab.get_architecture(self.cpu_monitor.get_static())
+        self.cpu_tab.get_vendor(self.cpu_monitor.get_static())
         self.cpu_tab.get_static(self.cpu_monitor.get_static())
         self.memory_tab.get_memory_stats(self.memory_monitor.get_mem_gb())
         self.performance_tab.set_cpu_name(self.monitor.get_cpu_name())
