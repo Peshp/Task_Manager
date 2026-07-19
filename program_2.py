@@ -1,5 +1,15 @@
-import psutil, time
+import subprocess
 
-net = psutil.net_io_counters()
-print(f"Bytes sent: {net.bytes_sent}")
-print(f"Bytes received: {net.bytes_recv}")
+result = subprocess.run(
+    ['lscpu'],
+    capture_output=True, text=True
+)
+
+data1 = dict()
+for i in result.stdout.splitlines():
+    if ":" in i:
+        label, value = i.split(':', 1)
+        data1[label.strip()] = value.strip()
+
+for i, v in data1.items():
+    print(i)
