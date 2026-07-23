@@ -1,5 +1,5 @@
-import subprocess
+import psutil
 
-line_as_bytes = subprocess.check_output("nvidia-smi -L", shell=True)
+disk = psutil.disk_usage('/')
 
-print(line_as_bytes)
+print(disk)
