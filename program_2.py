@@ -1,15 +1,20 @@
-import psutil
+import subprocess
 
-io = psutil.net_io_counters(pernic=True)
-stats = psutil.net_if_stats()
+def get_uevent_info(interface_name):
+    result = subprocess.run(
+        ["ethtool", "-i", interface_name],
+        capture_output=True, text=True
+    )
+    info = {}
+    for line in result.stdout.splitlines():
+        if ":" in line:
+            key, val = line.split(":", 1)
+            info[key.strip()] = val.strip()
+    return info
 
-targets = ["Ethernet", "Wi-Fi"]  # adjust names for your OS
+info = get_uevent_info("wlo1")
+slot = info.get("bus-info")   # correct key, e.g. "0000:00:14.3"
 
-for name in targets:
-    if name in io:
-        print(f"\n=== {name} ===")
-        print(f"Up: {stats[name].isup}, Speed: {stats[name].speed} Mbps")
-        print(f"Sent: {io[name].bytes_sent} bytes")
-        print(f"Recv: {io[name].bytes_recv} bytes")
-
-print(io)
+# print each key-value pair on its own line
+for key, val in info.items():
+    print(f"{key}: {val}")
