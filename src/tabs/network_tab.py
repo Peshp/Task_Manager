@@ -1,0 +1,99 @@
+import pyqtgraph as pg
+from collections import deque
+from PyQt6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QGridLayout
+from widgets.tab_service import make_stat_column, build_pair_grid
+
+class NetworkTab(QWidget):
+    MAX_POINTS = 60
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        layout = QVBoxLayout(self)
+        self.net_data = deque([0] * self.MAX_POINTS, maxlen=self.MAX_POINTS)
+        self.net_data_download = deque(maxlen=60) 
+        self.net_data_upload = deque(maxlen=60)
+
+
+        net_header = QHBoxLayout()
+        self.net_label = QLabel("")
+        self.net_label.setStyleSheet("color: white; font-size: 14pt; font-weight: 600;")
+
+        self.net_label_size = QLabel("")
+        self.net_label_size.setStyleSheet("color: #dddddd; font-size: 12pt;")
+
+        net_header.addWidget(self.net_label)
+        net_header.addStretch()
+        net_header.addWidget(self.net_label_size)
+        layout.addLayout(net_header)
+
+        self.net_plot = pg.PlotWidget()
+        self.net_plot.setBackground("#1e1e1e")
+        self.net_plot.setYRange(0, 100)
+        self.net_plot.showGrid(x=True, y=True, alpha=0.2)
+        # Download curve
+        self.download_curve = self.net_plot.plot(
+            list(self.net_data_download),
+            pen=pg.mkPen(color="#3498DB", width=2),
+            name="Download"
+        )
+
+        # Upload curve
+        self.upload_curve = self.net_plot.plot(
+            list(self.net_data_upload),
+            pen=pg.mkPen(color="#9B59B6", width=2),
+            name="Upload"
+        )
+
+        self.net_plot.addLegend()   
+        layout.addWidget(self.net_plot)
+
+        bottom_row = QHBoxLayout()
+        bottom_row.setSpacing(50)
+        bottom_row.setContentsMargins(0, 20, 0, 0)
+
+        dyn_col1 = make_stat_column(self, [("Download", "download"), ("Upload", "upload")])
+
+        bottom_row.addLayout(dyn_col1)
+
+        static_rows = [
+            ("IPv4:", "ipv4"),
+            ("IPv6:", "ipv6"),
+            ("Connection Type:", "connection_type"),
+            ("Version:", "version")
+        ]
+        static_col = QVBoxLayout()
+        static_col.setContentsMargins(0, 0, 0, 0)
+        static_col.addLayout(build_pair_grid(self, static_rows))
+        static_col.addStretch(1)
+
+        bottom_row.addLayout(static_col)
+        bottom_row.addStretch(1)   
+
+        layout.addLayout(bottom_row)
+
+    def update_data(self, data):
+        download_mbps = data['download_mbps']
+        upload_mbps = data['upload_mbps']
+
+        self.download_value.setText(f"{download_mbps:.2f} Mbps")
+        self.upload_value.setText(f"{upload_mbps:.2f} Mbps")
+
+        self.net_data_download.append(download_mbps)
+        self.net_data_upload.append(upload_mbps)
+
+        self.download_curve.setData(list(self.net_data_download))
+        self.upload_curve.setData(list(self.net_data_upload))
+
+        combined = list(self.net_data_download) + list(self.net_data_upload)
+        max_val = max(combined) if combined else 1
+        self.net_plot.setYRange(0, max(max_val * 1.2, 1))
+
+    def get_static(self, data):
+        self.ipv4.setText(data['ipv4'])
+        self.ipv6.setText(data['ipv6'])
+        self.connection_type.setText(data['connection_type'])
+        self.version.setText(data['version'])
+
+        self.net_label.setText(data['connection_type'])
+        self.net_label_size.setText(data['bus-info'])
