@@ -10,10 +10,9 @@ class NetworkTab(QWidget):
         super().__init__(parent)
 
         layout = QVBoxLayout(self)
-        self.net_data = deque([0] * self.MAX_POINTS, maxlen=self.MAX_POINTS)
-        self.net_data_download = deque(maxlen=60) 
-        self.net_data_upload = deque(maxlen=60)
-
+        
+        self.net_data_download = deque([0.0] * self.MAX_POINTS, maxlen=self.MAX_POINTS) 
+        self.net_data_upload = deque([0.0] * self.MAX_POINTS, maxlen=self.MAX_POINTS)
 
         net_header = QHBoxLayout()
         self.net_label = QLabel("")
@@ -31,21 +30,9 @@ class NetworkTab(QWidget):
         self.net_plot.setBackground("#1e1e1e")
         self.net_plot.setYRange(0, 100)
         self.net_plot.showGrid(x=True, y=True, alpha=0.2)
-        # Download curve
-        self.download_curve = self.net_plot.plot(
-            list(self.net_data_download),
-            pen=pg.mkPen(color="#3498DB", width=2),
-            name="Download"
-        )
-
-        # Upload curve
-        self.upload_curve = self.net_plot.plot(
-            list(self.net_data_upload),
-            pen=pg.mkPen(color="#9B59B6", width=2),
-            name="Upload"
-        )
-
-        self.net_plot.addLegend()   
+        self.net_curve = self.net_plot.plot(
+            list(self.net_data_download), pen=pg.mkPen(color="#9B59B6", width=2)
+        )     
         layout.addWidget(self.net_plot)
 
         bottom_row = QHBoxLayout()
@@ -80,20 +67,18 @@ class NetworkTab(QWidget):
         self.upload_value.setText(f"{upload_mbps:.2f} Mbps")
 
         self.net_data_download.append(download_mbps)
-        self.net_data_upload.append(upload_mbps)
+        self.net_curve.setData(list(self.net_data_download))
 
-        self.download_curve.setData(list(self.net_data_download))
-        self.upload_curve.setData(list(self.net_data_upload))
-
-        combined = list(self.net_data_download) + list(self.net_data_upload)
-        max_val = max(combined) if combined else 1
-        self.net_plot.setYRange(0, max(max_val * 1.2, 1))
 
     def get_static(self, data):
-        self.ipv4.setText(data['ipv4'])
-        self.ipv6.setText(data['ipv6'])
+        for key, val in data.items():
+            if key == 'ipv4':
+                self.ipv4.setText(data['ipv4'])
+            elif key == 'ipv6':
+                self.ipv6.setText(data['ipv6'])                 
+        
         self.connection_type.setText(data['connection_type'])
         self.version.setText(data['version'])
 
         self.net_label.setText(data['connection_type'])
-        self.net_label_size.setText(data['bus-info'])
+        self.net_label_size.setText(data.get('bus-info', ''))

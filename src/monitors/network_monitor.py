@@ -15,6 +15,18 @@ class NetworkMonitor(QObject):
 
         self.data = self.get_static()
 
+    def find_ethernet_interface(self):
+        for name in psutil.net_if_addrs():
+            if name.startswith("en"):
+                return name
+        return None
+
+    def find_wifi_interface(self):
+        for name in psutil.net_if_addrs():
+            if name.startswith("wl"):
+                return name
+        return None
+
     def get_uevent_info(self, interface_name):
         result = subprocess.run(
             ["ethtool", "-i", interface_name],
@@ -28,8 +40,9 @@ class NetworkMonitor(QObject):
         return info
 
     def poll(self):
+        net = self.find_wifi_interface() if self.find_ethernet_interface() == None else self.find_ethernet_interface()
         counters = psutil.net_io_counters(pernic=True)
-        new = counters.get('wlo1')
+        new = counters.get(net)
         if new is None or self.last is None:
             self.last = new
             return
@@ -43,18 +56,6 @@ class NetworkMonitor(QObject):
             'download_mbps': (recv_bytes * 8) / (self.interval_s * 1_000_000),
         }
         self.stats_updated.emit(data)
-
-    def find_ethernet_interface(self):
-        for name in psutil.net_if_addrs():
-            if name.startswith("en"):
-                return name
-        return None
-
-    def find_wifi_interface(self):
-        for name in psutil.net_if_addrs():
-            if name.startswith("wl"):
-                return name
-        return None
 
     def get_static(self):
         data = dict()
@@ -73,10 +74,16 @@ class NetworkMonitor(QObject):
                 data['ipv4'] = addr.address
             elif addr.family == socket.AF_INET6:
                 data['ipv6'] = addr.address.split('%')[0]
+            else:
+                continue
 
         for key, val in info.items():
             if key in ('version', 'bus-info'):
                 data[key] = val
 
         return data
+        
+        
+
+        
 
