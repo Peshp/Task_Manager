@@ -10,6 +10,12 @@ class DiskTab(QWidget):
         super().__init__(parent)
         layout = QVBoxLayout(self)
 
+        disk_header = QHBoxLayout()
+        self.disk_label = QLabel("Disk")
+        self.disk_label.setStyleSheet("color: white; font-size: 16pt; font-weight: 600;")
+        disk_header.addWidget(self.disk_label)
+        layout.addLayout(disk_header)
+
         self.disk_data = deque([0] * self.MAX_POINTS, maxlen=self.MAX_POINTS)
 
         self.disk_plot = pg.PlotWidget()
