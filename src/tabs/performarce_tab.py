@@ -7,53 +7,27 @@ class PerformarceTab(QWidget):
 
     def __init__(self, parent = None):
         super().__init__(parent)
-        layout = QVBoxLayout(self)
+        self.layout = QVBoxLayout(self)
 
         self.cpu_data = deque([0] * self.MAX_POINTS, maxlen=self.MAX_POINTS)
         self.mem_data = deque([0] * self.MAX_POINTS, maxlen=self.MAX_POINTS)
+        self.net_data = deque([0] * self.MAX_POINTS, maxlen=self.MAX_POINTS)
+        self.disk_data = deque([0] * self.MAX_POINTS, maxlen=self.MAX_POINTS)
 
         # CPU:
-        cpu_header = QHBoxLayout()
-        self.cpu_label = QLabel("CPU: 0%")
-        self.cpu_label.setStyleSheet("color: white; font-size: 14pt; font-weight: 600;")
-
-        self.cpu_name_label = QLabel("")
-        self.cpu_name_label.setStyleSheet("color: #dddddd; font-size: 12pt;")
-
-        cpu_header.addWidget(self.cpu_label)
-        cpu_header.addStretch()
-        cpu_header.addWidget(self.cpu_name_label)
-        layout.addLayout(cpu_header)
-
-        self.cpu_plot = pg.PlotWidget()
-        self.cpu_plot.setBackground("#1e1e1e")
-        self.cpu_plot.setYRange(0, 100)
-        self.cpu_plot.showGrid(x=True, y=True, alpha=0.2)
-        self.cpu_curve = self.cpu_plot.plot(pen=pg.mkPen(color="#4A90D9", width=2))
-        layout.addWidget(self.cpu_plot)
+        cpu_plot = self.create_plot('cpu')
+        self.layout.addWidget(cpu_plot)
 
         # Memory:
-        mem_header = QHBoxLayout()
-        self.mem_label = QLabel("Memory: 0%")
-        self.mem_label.setStyleSheet("color: white; font-size: 14pt; font-weight: 600;")
+        mem_plot = self.create_plot('mem')
+        self.layout.addWidget(mem_plot)
 
-        self.memory_capacity = QLabel("")
-        self.memory_capacity.setStyleSheet("color: #dddddd; font-size: 12pt;")
+        # Network:
+        net_plot = self.create_plot('net')
+        self.layout.addWidget(net_plot)
 
-        mem_header.addWidget(self.mem_label)
-        mem_header.addStretch()
-        mem_header.addWidget(self.memory_capacity)
-
-        layout.addLayout(mem_header)
-
-        self.mem_plot = pg.PlotWidget()
-        self.mem_plot.setBackground("#1e1e1e")
-        self.mem_plot.setYRange(0, 100)
-        self.mem_plot.showGrid(x=True, y=True, alpha=0.2)
-        self.mem_curve = self.mem_plot.plot(
-            list(self.mem_data), pen=pg.mkPen(color="#9B59B6", width=2)
-        )
-        layout.addWidget(self.mem_plot)
+        # Disk:
+        self.create_plot('disk')
 
 
     def update_data(self, data):
@@ -67,6 +41,45 @@ class PerformarceTab(QWidget):
         self.mem_curve.setData(list(self.mem_data)) 
         self.cpu_label.setText(f'CPU: {cpu_percent:.1f}%')
         self.mem_label.setText(f'Memory: {mem_percent:.1f}%')
+
+    def net_update_data(self, data):
+        download_mbps = data['download_mbps']
+        self.net_data.append(download_mbps)
+        self.net_curve.setData(list(self.net_data))
+        self.net_label.setText(f'Network: {download_mbps:.1f}%')
+
+    def disk_update_data(self, data):
+        disk_active = data['active']
+        self.disk_data.append(disk_active)
+        self.disk_curve.setData(list(self.disk_data))
+        self.disk_label.setText(f'Disk: {disk_active:.1f}%')
     
     def set_cpu_name(self, cpu_name):
         self.cpu_name_label.setText(cpu_name)
+
+    def create_plot(self, name: str):
+        header = QHBoxLayout()
+
+        value_label = QLabel()
+        value_label.setStyleSheet("color: white; font-size: 14pt; font-weight: 600;")
+
+        name_label = QLabel("")
+        name_label.setStyleSheet("color: #dddddd; font-size: 12pt;")
+
+        header.addWidget(value_label)
+        header.addStretch()
+        header.addWidget(name_label)
+        self.layout.addLayout(header)
+
+        plot = pg.PlotWidget()
+        plot.setBackground("#1e1e1e")
+        plot.setYRange(0, 100)
+        plot.showGrid(x=True, y=True, alpha=0.2)
+        curve = plot.plot(pen=pg.mkPen(color='#9B59B6', width=2))
+
+        self.layout.addWidget(plot)
+
+        setattr(self, f"{name}_label", value_label)
+        setattr(self, f"{name}_name_label", name_label)
+        setattr(self, f"{name}_plot", plot)
+        setattr(self, f"{name}_curve", curve)
