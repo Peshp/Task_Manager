@@ -1,0 +1,151 @@
+QMenu {
+    background-color: #2b2b2b;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    font-size: 13pt;              
+    padding: 4px;
+}
+QMenu::item {
+    background-color: transparent;
+    padding: 10px 30px 10px 24px;  /* more vertical + horizontal space */
+    min-width: 180px;
+}
+QMenu::item:selected {
+    background-color: #454545;
+}
+QMenu::separator {
+    height: 1px;
+    background: #555;
+    margin: 6px 4px;
+}
+QMenu::right-arrow {
+    width: 14px;
+    height: 14px;
+}
+QMenu::indicator {
+    width: 16px;
+    height: 16px;
+}
+
+/* Widgets embedded inside menus (checkboxes, labels in Transforms etc.) */
+QMenu QWidget {
+    background-color: #2b2b2b;
+    color: #e0e0e0;
+    font-size: 13pt;
+}
+QMenu QLabel {
+    background-color: transparent;
+    color: #e0e0e0;
+    font-size: 13pt;
+    padding: 4px 6px;
+}
+QMenu QCheckBox {
+    background-color: transparent;
+    color: #e0e0e0;
+    font-size: 13pt;
+    spacing: 10px;
+    padding: 6px 4px;
+}
+QMenu QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #777;
+    background: #2b2b2b;
+}
+QMenu QCheckBox::indicator:checked {
+    background: #5a9bd4;
+    border: 1px solid #5a9bd4;
+}
+
+QDialog {
+    background-color: #2b2b2b;
+    color: #e0e0e0;
+    font-size: 13pt;
+}
+QLabel {
+    background-color: transparent;
+    color: #e0e0e0;
+    font-size: 13pt;
+    padding: 4px 2px;
+}
+QTreeWidget, QListWidget, QTreeView, QListView {
+    background-color: #232323;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    alternate-background-color: #2a2a2a;
+    font-size: 13pt;
+}
+QTreeWidget::item, QListWidget::item {
+    padding: 8px 6px;          
+}
+QTreeWidget::item:selected, QListWidget::item:selected {
+    background-color: #d9531e;
+    color: #ffffff;
+}
+QHeaderView::section {
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    font-size: 13pt;
+    padding: 6px;
+}
+QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox {
+    background-color: #232323;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    font-size: 13pt;
+    padding: 6px;
+    min-height: 22px;
+}
+QComboBox QAbstractItemView {
+    background-color: #232323;
+    color: #e0e0e0;
+    selection-background-color: #d9531e;
+    font-size: 13pt;
+    padding: 4px;
+}
+QPushButton {
+    background-color: #3a3a3a;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    font-size: 13pt;
+    padding: 8px 16px;         
+    min-width: 70px;
+}
+QPushButton:hover {
+    background-color: #454545;
+}
+QPushButton:disabled {
+    color: #777;
+}
+QScrollBar:vertical, QScrollBar:horizontal {
+    background: #2b2b2b;
+    border: none;
+    width: 14px;
+    height: 14px;
+}
+QScrollBar::handle {
+    background: #555;
+    border-radius: 3px;
+    min-height: 20px;
+}
+
+QFileDialog {
+    background-color: #2b2b2b;
+    color: #e0e0e0;
+    font-size: 13pt;
+}
+QFileDialog QListView, QFileDialog QTreeView {
+    background-color: #232323;
+    color: #e0e0e0;
+    font-size: 13pt;
+}
+QFileDialog QToolButton {
+    background-color: #3a3a3a;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    padding: 6px;
+}
+QFileDialog QToolButton:hover {
+    background-color: #454545;
+}
