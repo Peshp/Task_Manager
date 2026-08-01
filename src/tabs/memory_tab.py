@@ -1,11 +1,12 @@
 import pyqtgraph as pg
 from collections import deque
-from PyQt6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget
+from PyQt6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QGridLayout
+from widgets.tab_service import make_stat_column, build_pair_grid
 
 class MemoryTab(QWidget):
     MAX_POINTS = 60
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
 
         layout = QVBoxLayout(self)
@@ -21,7 +22,6 @@ class MemoryTab(QWidget):
         mem_header.addWidget(self.mem_label)
         mem_header.addStretch()
         mem_header.addWidget(self.disk_label_size)
-
         layout.addLayout(mem_header)
 
         self.mem_plot = pg.PlotWidget()
@@ -33,50 +33,31 @@ class MemoryTab(QWidget):
         )
         layout.addWidget(self.mem_plot)
 
-        self.stats_container = QHBoxLayout()
-        self.stats_container.setContentsMargins(20, 8, 20, 8)  
-        self.stats_container.setSpacing(30)    
+        bottom_row = QHBoxLayout()
+        bottom_row.setSpacing(50)
+        bottom_row.setContentsMargins(0, 20, 0, 0)
 
-        left_column = QVBoxLayout()
-        left_column.setContentsMargins(0, 0, 0, 0)
-        left_column.setSpacing(6)
+        dyn_col1 = make_stat_column(self, [("Active", "active_memory"), ("Cached", "cached_memory")])
+        dyn_col2 = make_stat_column(self, [("Free", "free_memory"), ("Shared", "shared_memory")])
 
-        self.active_memory = QLabel('')
-        self.active_memory.setStyleSheet("color: white; font-size: 14pt; font-weight: 600;")
-        left_column.addWidget(self.active_memory)
+        bottom_row.addLayout(dyn_col1)
+        bottom_row.addLayout(dyn_col2)
 
-        self.free_memory = QLabel('')
-        self.free_memory.setStyleSheet("color: white; font-size: 14pt; font-weight: 600;")
-        left_column.addWidget(self.free_memory)
+        static_rows = [
+            ("Speed:", "active_speed"),
+            ("Form factor:", "form_factor"),
+            ("Location:", "location"),
+            ("Capacity:", "capacity"),
+        ]
+        static_col = QVBoxLayout()
+        static_col.setContentsMargins(0, 0, 0, 0)
+        static_col.addLayout(build_pair_grid(self, static_rows))
+        static_col.addStretch(1)
 
-        self.cached_memory = QLabel('')
-        self.cached_memory.setStyleSheet("color: white; font-size: 14pt; font-weight: 600;")
-        left_column.addWidget(self.cached_memory)
+        bottom_row.addLayout(static_col)
+        bottom_row.addStretch(1)   
 
-        self.shared_memory = QLabel('')
-        self.shared_memory.setStyleSheet("color: white; font-size: 14pt; font-weight: 600;")
-        left_column.addWidget(self.shared_memory)
-
-        self.stats_container.addLayout(left_column)
-
-        right_column = QVBoxLayout()
-        right_column.setContentsMargins(0, 0, 0, 0)
-        right_column.setSpacing(4)
-
-        self.disk_label_speed = QLabel('')
-        self.disk_label_speed.setStyleSheet("color: white; font-size: 14pt; font-weight: 600;")
-        right_column.addWidget(self.disk_label_speed)
-
-        self.disk_label_form = QLabel('')
-        self.disk_label_form.setStyleSheet("color: white; font-size: 14pt; font-weight: 600;")
-        right_column.addWidget(self.disk_label_form)
-
-        self.disk_label_slots = QLabel('')
-        self.disk_label_slots.setStyleSheet("color: white; font-size: 14pt; font-weight: 600;")
-        right_column.addWidget(self.disk_label_slots)
-
-        self.stats_container.addLayout(right_column)
-        layout.addLayout(self.stats_container)
+        layout.addLayout(bottom_row)
     
     def update_data(self, data):
         mem_percent = data['memory'].percent
@@ -85,10 +66,10 @@ class MemoryTab(QWidget):
         cached = data['cached']
         shared = data['shared']
 
-        self.active_memory.setText(f'Active {active:.2F} GB')
-        self.free_memory.setText(f'Free {free:.2f} GB')
-        self.cached_memory.setText(f'Cached: {cached:.2f} GB')
-        self.shared_memory.setText(f'Shared: {shared:.2f} GB')
+        self.active_memory_value.setText(f'{active:.2f} GB')
+        self.cached_memory_value.setText(f'{free:.2f} GB')
+        self.free_memory_value.setText(f'{cached:.2f} GB')
+        self.shared_memory_value.setText(f'{shared:.2f} GB')
 
         self.mem_data.append(mem_percent)
 
@@ -96,10 +77,10 @@ class MemoryTab(QWidget):
         self.mem_label.setText(f'Memory: {mem_percent:.1f}%')
     
     def get_memory_stats(self, data):
-        self.disk_label_speed.setText(f"Speed: {data['Configured Memory Speed']}")
-        self.disk_label_form.setText(f"Form factor: {data['Form Factor']}")
-        self.disk_label_slots.setText(f"Location: slot {data['Locator']}")
-        self.disk_label_size.setText(f"Capacity: {data['Maximum Capacity']}")
+        self.active_speed.setText(f"{data['Configured Memory Speed']}")
+        self.form_factor.setText(f"{data['Form Factor']}")
+        self.location.setText(f"{data['Locator']}")
+        self.capacity.setText(f"{data['Maximum Capacity']}")
 
 
 
