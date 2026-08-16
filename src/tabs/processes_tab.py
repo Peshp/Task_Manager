@@ -25,7 +25,9 @@ class ProcessesTab(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         self.pid_to_path = {}
-        self.pid_col_idx = 0    
+        self.pid_col_idx = 0
+        self.selected_pid = None   
+        self.paused = False        
 
         self.table = QTableWidget()
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -93,18 +95,38 @@ class ProcessesTab(QWidget):
         """)
 
         layout.addWidget(self.table)
+        self.table.itemSelectionChanged.connect(self._on_selection_changed)
+
+    def _on_selection_changed(self):
+        rows = self.table.selectionModel().selectedRows()
+        if rows:
+            pid_item = self.table.item(rows[0].row(), self.pid_col_idx)
+            try:
+                self.selected_pid = int(pid_item.text())
+            except (ValueError, AttributeError, TypeError):
+                self.selected_pid = None
+        else:
+            self.selected_pid = None
 
     def update_data(self, cpu_rows):
+        if self.paused:
+            return
+        if not cpu_rows:
+            return
+
         columns = [k for k in list(cpu_rows[0].keys()) if k != 'Path']
         self.pid_to_path = {row["PID"]: row.get("Path", "") for row in cpu_rows}
-        
+
         if "PID" in columns:
             self.pid_col_idx = columns.index("PID")
+
+        scroll_pos = self.table.verticalScrollBar().value()
 
         self.table.setColumnCount(len(columns))
         self.table.setHorizontalHeaderLabels(columns)
         self.table.setRowCount(len(cpu_rows))
 
+        restore_row = None
         for row_idx, row_data in enumerate(cpu_rows):
             for col_idx, key in enumerate(columns):
                 value = row_data[key]
@@ -120,20 +142,39 @@ class ProcessesTab(QWidget):
                 item.setData(Qt.ItemDataRole.UserRole, value)
                 self.table.setItem(row_idx, col_idx, item)
 
+            if "PID" in row_data and row_data["PID"] == self.selected_pid:
+                restore_row = row_idx
+
+        if restore_row is not None:
+            self.table.blockSignals(True)  
+            self.table.selectRow(restore_row)
+            self.table.blockSignals(False)
+            self.table.scrollToItem(
+                self.table.item(restore_row, 0),
+                QAbstractItemView.ScrollHint.PositionAtCenter
+            )
+        else:
+            self.table.verticalScrollBar().setValue(scroll_pos)
+
     def contextMenuEvent(self, event):
         pos_in_table = self.table.viewport().mapFromGlobal(event.globalPos())
         item = self.table.itemAt(pos_in_table)
 
+        if item is None:
+            return
+
         row = item.row()
         self.table.selectRow(row)
+        self.paused = True
 
         menu = QMenu(self)
         open_location_action = menu.addAction('Open file location')
         open_location_action.triggered.connect(lambda: self.open_file_location(row))
 
-        end_task_action = menu.addAction('En task')
+        end_task_action = menu.addAction('End task')
         end_task_action.triggered.connect(lambda: self.end_task(row))
-        
+
+        menu.aboutToHide.connect(lambda: setattr(self, 'paused', False))
         menu.exec(event.globalPos())
 
     def open_file_location(self, row):
@@ -148,7 +189,7 @@ class ProcessesTab(QWidget):
         subprocess.Popen(["xdg-open", folder])
 
     def end_task(self, row):
-        pid_item = self.table.item(row, self.pid_col_idx) 
+        pid_item = self.table.item(row, self.pid_col_idx)
         try:
             pid = int(pid_item.text())
         except ValueError:
@@ -160,4 +201,6 @@ class ProcessesTab(QWidget):
             os.kill(pid, signal.SIGKILL)
 
         self.pid_to_path.pop(pid, None)
+        if self.selected_pid == pid:
+            self.selected_pid = None
         self.table.removeRow(row)
