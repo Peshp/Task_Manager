@@ -8,6 +8,7 @@ from tabs.processes_tab import ProcessesTab
 from tabs.memory_tab import MemoryTab
 from tabs.disk_tab import DiskTab
 from tabs.cpu_tab import CPUTab
+from tabs.gpu_tab import GPUTab
 from tabs.network_tab import NetworkTab
 from monitors.system_monitor import SystemMonitor
 from monitors.memory_monitor import MemoryMonitor
@@ -15,6 +16,7 @@ from monitors.cpu_monitor import CPUMonitor
 from monitors.network_monitor import NetworkMonitor
 from monitors.processes_monitor import ProcessesMonitor
 from monitors.disk_monitor import DiskMonitor
+from monitors.gpu_monitor import GPUMonitor
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -40,6 +42,7 @@ class MainWindow(QMainWindow):
         self.net_monitor = NetworkMonitor(interval_ms=1000)
         self.proc_monitor = ProcessesMonitor(interval_ms=1000)
         self.disk_monitor = DiskMonitor(interval_ms=1000)
+        self.gpu_monitor = GPUMonitor(interval_ms=1000)
 
         self.processes_tab = ProcessesTab()
         self.performance_tab = PerformarceTab()
@@ -47,18 +50,21 @@ class MainWindow(QMainWindow):
         self.disk_tab = DiskTab()
         self.cpu_tab = CPUTab()
         self.net_tab = NetworkTab()
+        self.gpu_tab = GPUTab()
 
         self.monitor.stats_updated.connect(self.performance_tab.update_data)
         self.net_monitor.stats_updated.connect(self.performance_tab.net_update_data)
         self.disk_monitor.stats_updated_disk.connect(self.performance_tab.disk_update_data)
         self.net_monitor.stats_updated.connect(self.net_tab.update_data)
         self.cpu_monitor.stats_updated.connect(self.cpu_tab.update_data)
+        self.gpu_monitor.stats_updated.connect(self.gpu_tab.update_data)
         self.proc_monitor.stats_updated.connect(self.processes_tab.update_data)
         self.memory_monitor.stats_updated.connect(self.memory_tab.update_data)
         self.disk_monitor.stats_updated_disk.connect(self.disk_tab.update_data)
         self.cpu_tab.get_architecture(self.cpu_monitor.get_static())
         self.cpu_tab.get_vendor(self.cpu_monitor.get_static())
         self.cpu_tab.get_static(self.cpu_monitor.get_static())
+        self.gpu_tab.get_static(self.gpu_monitor.get_static())
         self.memory_tab.get_memory_stats(self.memory_monitor.get_mem_gb())
         self.performance_tab.set_cpu_name(self.monitor.get_cpu_name())
         self.disk_tab.set_disk_capacity(self.disk_monitor.get_disk_stats())
@@ -72,6 +78,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.processes_tab, 'Processes')
         self.tabs.addTab(self.performance_tab, 'Performance')
         self.tabs.addTab(self.cpu_tab, 'CPU')
+        self.tabs.addTab(self.gpu_tab, 'GPU')
         self.tabs.addTab(self.memory_tab, 'RAM')
         self.tabs.addTab(self.disk_tab, 'Disk')
         self.tabs.addTab(self.net_tab, 'Network')
