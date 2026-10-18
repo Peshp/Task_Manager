@@ -65,7 +65,6 @@ class MainWindow(QMainWindow):
         self.cpu_tab.get_vendor(self.cpu_monitor.get_static())
         self.cpu_tab.get_static(self.cpu_monitor.get_static())
         self.gpu_tab.get_static(self.gpu_monitor.get_static())
-        self.gpu_tab.get_vendor(self.gpu_monitor.get_static())
         self.memory_tab.get_memory_stats(self.memory_monitor.get_mem_gb())
         self.performance_tab.set_cpu_name(self.monitor.get_cpu_name())
         self.disk_tab.set_disk_capacity(self.disk_monitor.get_disk_stats())

@@ -45,13 +45,8 @@ class GPUTab(QWidget):
         dynamic_grid = QHBoxLayout()
         dynamic_grid.setSpacing(10)
 
-        real_time_1 = [
-            ('Fan Duty (%)', 'fan_duty'),
-            ('Performance Mode', 'performarce'),
-            ('Temperature Edge (°C)', 'temp_edge'),
-            ('Power Draw (W)', 'power_draw'),
-            ('Power Limit (W)', 'power_limit')
-        ]
+        dyn_col1 = QVBoxLayout()
+        dyn_col1.setSpacing(4)
 
         real_time_2 = [
              ("Voltage (mV)", 'voltage'),
@@ -60,8 +55,59 @@ class GPUTab(QWidget):
              ('Fan Speed (RPM)', 'fan_speed')
         ]
 
-        dynamic_grid.addLayout(self.build_pair_dym(real_time_1))
-        dynamic_grid.addLayout(self.build_pair_dym(real_time_2))
+        self.temp_edge_title = QLabel("Temperature Edge (°C)")
+        self.temp_edge_title.setStyleSheet("color: #9b9b9b; font-size: 14pt;")
+        self.temp_edge = QLabel("0")
+        self.temp_edge.setStyleSheet("color: white; font-size: 16pt;")
+        dyn_col1.addWidget(self.temp_edge_title)
+        dyn_col1.addWidget(self.temp_edge)
+        dyn_col1.addSpacing(10)
+
+        self.power_limit_title = QLabel("Up time")
+        self.power_limit_title.setStyleSheet("color: #9b9b9b; font-size: 14pt;")
+        self.power_limit = QLabel("00:00:00")
+        self.power_limit.setStyleSheet("color: white; font-size: 16pt;")
+        dyn_col1.addWidget(self.power_limit_title)
+        dyn_col1.addWidget(self.power_limit)
+        dyn_col1.addStretch()
+
+        self.voltage_title = QLabel("Voltage (mV)")
+        self.voltage_title.setStyleSheet("color: #9b9b9b; font-size: 14pt;")
+        self.voltage = QLabel("00:00:00")
+        self.voltage.setStyleSheet("color: white; font-size: 16pt;")
+        dyn_col1.addWidget(self.voltage_title)
+        dyn_col1.addWidget(self.voltage)
+        dyn_col1.addStretch()
+
+        dyn_col2 = QVBoxLayout()
+        dyn_col2.setSpacing(4) 
+
+        self.core_clock_title = QLabel("Core Clock (MHz)")
+        self.core_clock_title.setStyleSheet("color: #9b9b9b; font-size: 14pt;")
+        self.core_clock = QLabel("0.00 GHz")
+        self.core_clock.setStyleSheet("color: white; font-size: 22pt; font-weight: 300;")
+        dyn_col2.addWidget(self.core_clock_title)
+        dyn_col2.addWidget(self.core_clock)
+        dyn_col2.addSpacing(10)
+
+        self.memory_clock_title = QLabel("Memory Clock (MHz)")
+        self.memory_clock_title.setStyleSheet("color: #9b9b9b; font-size: 14pt;")
+        self.memory_clock = QLabel("0.00 GHz")
+        self.memory_clock.setStyleSheet("color: white; font-size: 22pt; font-weight: 300;")
+        dyn_col2.addWidget(self.memory_clock_title)
+        dyn_col2.addWidget(self.memory_clock)
+        dyn_col2.addSpacing(10)
+
+        self.fan_speed_title = QLabel("Fan Speed (RPM)")
+        self.fan_speed_title.setStyleSheet("color: #9b9b9b; font-size: 14pt;")
+        self.fan_speed = QLabel("0.00 GHz")
+        self.fan_speed.setStyleSheet("color: white; font-size: 22pt; font-weight: 300;")
+        dyn_col2.addWidget(self.fan_speed_title)
+        dyn_col2.addWidget(self.fan_speed)
+        dyn_col2.addSpacing(10)
+
+        dynamic_grid.addLayout(dyn_col1)
+        dynamic_grid.addLayout(dyn_col2)
 
         left_main.addLayout(dynamic_grid)
         left_main.addStretch()
@@ -72,7 +118,6 @@ class GPUTab(QWidget):
         right_main.setVerticalSpacing(0)
 
         static_rows = [
-            ("VBIOS Version", "vbios_version"),
             ("VRAM Total (MiB)", "vram_total_mib"),
             ("GTT", "gtt"),
             ("Performarce Level", "perf"),
@@ -84,17 +129,8 @@ class GPUTab(QWidget):
             ("Fan RPM Max", "fan_rpm_max"),
         ]
 
-        vendor_rows = [
-            ("GPU Model", "gpu_model"),
-            ("GPU Vendor", "gpu_vendor"),
-            ("GPU Product Name", "product_name"),
-            ("PCI Device ID", "pci_device_id"),
-            ("PCI Vendor ID", "pci_vendor_id"),
-        ]
-
         left_column = QVBoxLayout()
         left_column.addSpacing(20)
-        left_column.addLayout(self.build_pair_grid(vendor_rows))
         left_column.addStretch()
 
         right_column = self.build_pair_grid(static_rows)
@@ -116,10 +152,7 @@ class GPUTab(QWidget):
         gpu_percent = data['GPU Load (%)']
         self.gpu_label.setText(f'{gpu_percent:.0f}%')
 
-        self.fan_duty.setText(f"{data.get('Fan Duty (%)') or 0:.0f}%")
-        self.performarce.setText(str(data.get("Performance Mode")))
         self.temp_edge.setText(f"{data.get('Temperature Edge (°C)') or 0:.1f} °C")
-        self.power_draw.setText(f"{data.get('Power Draw (W)') or 0:.1f} W")
         self.power_limit.setText(f"{data.get('Power Limit (W)') or 0:.0f} W")
 
         self.voltage.setText(f"{data.get('Voltage (mV)') or 0:.0f} mV")
@@ -132,7 +165,8 @@ class GPUTab(QWidget):
         self.gpu_label.setText(f'GPU: {gpu_percent}')
     
     def get_static(self, data):
-        self.vbios_version.setText(str(data.get("VBIOS")))
+        self.gpu_vendor_label.setText(str(data.get('GPU')))
+
         self.vram_total_mib.setText(str(data.get("VRAM")))
         self.gtt.setText(str(data.get("GTT")))
         self.perf.setText(str(data.get("Perf level")))
@@ -145,12 +179,6 @@ class GPUTab(QWidget):
 
         self.fan_rpm_min.setText(f"{data.get('Fan RPM Min') or 0:.0f} RPM")
         self.fan_rpm_max.setText(f"{data.get('Fan RPM Max') or 0:.0f} RPM")
-    
-    def get_vendor(self, data):
-        self.gpu_model.setText(str(data.get("GPU")))
-        self.gpu_vendor.setText(str(data.get("Vendor")))
-        self.pci_device_id.setText(str(data.get("PCI Device ID")))
-        self.pci_vendor_id.setText(str(data.get("PCI Vendor ID")))
 
     def build_pair_dym(self, pairs):
         dyn_col1 = QGridLayout()
